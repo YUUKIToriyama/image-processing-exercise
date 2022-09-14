@@ -1,45 +1,59 @@
-use image::{GenericImageView, ImageBuffer, Rgba};
+use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 
 fn main() {
-    let scale: u32 = 2;
+    let scale: u32 = 3;
     let img = image::open("./sample.png").unwrap();
-    let (width, height) = img.dimensions();
-
-    let mut larger_img = ImageBuffer::new(width * scale, height * scale);
-
-    for y in 0..height - 1 {
-        for x in 0..width - 1 {
-            let nw_pixel = img.get_pixel(x, y);
-            let ne_pixel = img.get_pixel(x + 1, y);
-            let sw_pixel = img.get_pixel(x, y + 1);
-            let se_pixel = img.get_pixel(x + 1, y + 1);
-
-            larger_img.put_pixel(x * scale, y * scale, nw_pixel);
-            larger_img.put_pixel(
-                x * scale + 1,
-                y * scale,
-                calculate_average(nw_pixel, ne_pixel),
-            );
-            larger_img.put_pixel(
-                x * scale,
-                y * scale + 1,
-                calculate_average(nw_pixel, sw_pixel),
-            );
-            larger_img.put_pixel(
-                x * scale + 1,
-                y * scale + 1,
-                calculate_average(nw_pixel, se_pixel),
-            );
-        }
-    }
-
-    larger_img.save("./generated.png").unwrap();
+    let enlarged_img = enlarge_image(img, scale);
+    enlarged_img.save("./generated.png").unwrap();
 }
 
-fn calculate_average(left: Rgba<u8>, right: Rgba<u8>) -> Rgba<u8> {
-    let r = left[0] / 2 + right[0] / 2;
-    let g = left[1] / 2 + right[1] / 2;
-    let b = left[2] / 2 + right[2] / 2;
-    let a = left[3] / 2 + right[3] / 2;
-    Rgba([r, g, b, a])
+fn enlarge_image(img: DynamicImage, scale: u32) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+    // まずx軸方向に拡大する
+    let mut horizontal_enlarged_img = ImageBuffer::new(img.width() * scale, img.height());
+    for y in 0..img.height() - 1 {
+        for x in 0..img.width() - 1 {
+            let west = img.get_pixel(x, y);
+            let east = img.get_pixel(x + 1, y);
+
+            for dx in 0..scale {
+                let pixel = Rgba([
+                    calculate_intermediate_number(west[0], east[0], scale as u8, dx as u8),
+                    calculate_intermediate_number(west[1], east[1], scale as u8, dx as u8),
+                    calculate_intermediate_number(west[2], east[2], scale as u8, dx as u8),
+                    calculate_intermediate_number(west[3], east[3], scale as u8, dx as u8),
+                ]);
+                horizontal_enlarged_img.put_pixel(x * scale + dx, y, pixel);
+            }
+        }
+    }
+    // 次にy軸方向に拡大する
+    let mut vertical_enlarged_img = ImageBuffer::new(
+        horizontal_enlarged_img.width(),
+        horizontal_enlarged_img.height() * scale,
+    );
+    for y in 0..horizontal_enlarged_img.height() - 1 {
+        for x in 0..horizontal_enlarged_img.width() - 1 {
+            let north = horizontal_enlarged_img.get_pixel(x, y);
+            let south = horizontal_enlarged_img.get_pixel(x, y + 1);
+
+            for dy in 0..scale {
+                let pixel = Rgba([
+                    calculate_intermediate_number(north[0], south[0], scale as u8, dy as u8),
+                    calculate_intermediate_number(north[1], south[1], scale as u8, dy as u8),
+                    calculate_intermediate_number(north[2], south[2], scale as u8, dy as u8),
+                    calculate_intermediate_number(north[3], south[3], scale as u8, dy as u8),
+                ]);
+                vertical_enlarged_img.put_pixel(x, y * scale + dy, pixel);
+            }
+        }
+    }
+    vertical_enlarged_img
+}
+
+fn calculate_intermediate_number(left: u8, right: u8, scale: u8, d: u8) -> u8 {
+    if left > right {
+        right + ((((left - right) as f32) / (scale as f32)) * (d as f32)) as u8
+    } else {
+        left + ((((right - left) as f32) / (scale as f32)) * (d as f32)) as u8
+    }
 }
