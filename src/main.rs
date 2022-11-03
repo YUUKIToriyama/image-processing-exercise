@@ -1,4 +1,5 @@
 mod scale;
+mod affine;
 
 use scale::enlarge_image;
 
