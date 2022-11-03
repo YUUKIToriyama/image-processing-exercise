@@ -13,7 +13,7 @@ pub fn rotate_image(img: DynamicImage, angle: f32) -> ImageBuffer<Rgba<u8>, Vec<
             let y = u as f32 * angle.sin() + v as f32 * angle.cos();
 
             // 計算された座標が元の画像の領域内にあるか
-            if 0.0 < x && x < img.width() as f32 && 0.0 < y && y < img.height() as f32 {
+            if 0.0 < x && x < (img.width() - 1) as f32 && 0.0 < y && y < (img.height() - 1) as f32 {
                 let nw = img.get_pixel(x.floor() as u32, y.floor() as u32);
                 let ne = img.get_pixel(x.ceil() as u32, y.floor() as u32);
                 let sw = img.get_pixel(x.ceil() as u32, y.ceil() as u32);
@@ -30,9 +30,9 @@ pub fn rotate_image(img: DynamicImage, angle: f32) -> ImageBuffer<Rgba<u8>, Vec<
 
 fn get_average_color(nw: Rgba<u8>, ne: Rgba<u8>, sw: Rgba<u8>, se: Rgba<u8>) -> Rgba<u8> {
     Rgba::from_channels(
-        (nw[0] + ne[0] + sw[0] + se[0]) / 4,
-        (nw[1] + ne[1] + sw[1] + se[1]) / 4,
-        (nw[2] + ne[2] + sw[2] + se[2]) / 4,
-        (nw[3] + ne[3] + sw[3] + se[3]) / 4,
+        nw[0] / 4 + ne[0] / 4 + sw[0] / 4 + se[0] / 4,
+        nw[1] / 4 + ne[1] / 4 + sw[1] / 4 + se[1] / 4,
+        nw[2] / 4 + ne[2] / 4 + sw[2] / 4 + se[2] / 4,
+        nw[3] / 4 + ne[3] / 4 + sw[3] / 4 + se[3] / 4,
     )
 }
