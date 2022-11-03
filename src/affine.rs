@@ -27,7 +27,7 @@ pub fn rotate_image(img: DynamicImage, angle: f32) -> ImageBuffer<Rgba<u8>, Vec<
 
                 rotated_img.put_pixel(u, v, get_average_color(nw, ne, sw, se));
             } else {
-                rotated_img.put_pixel(u, v, Rgba::from_channels(0, 0, 0, 0));
+                rotated_img.put_pixel(u, v, Rgba([0, 0, 0, 0]))
             }
         }
     }
@@ -35,10 +35,10 @@ pub fn rotate_image(img: DynamicImage, angle: f32) -> ImageBuffer<Rgba<u8>, Vec<
 }
 
 fn get_average_color(nw: Rgba<u8>, ne: Rgba<u8>, sw: Rgba<u8>, se: Rgba<u8>) -> Rgba<u8> {
-    Rgba::from_channels(
+    Rgba([
         nw[0] / 4 + ne[0] / 4 + sw[0] / 4 + se[0] / 4,
         nw[1] / 4 + ne[1] / 4 + sw[1] / 4 + se[1] / 4,
         nw[2] / 4 + ne[2] / 4 + sw[2] / 4 + se[2] / 4,
         nw[3] / 4 + ne[3] / 4 + sw[3] / 4 + se[3] / 4,
-    )
+    ])
 }
