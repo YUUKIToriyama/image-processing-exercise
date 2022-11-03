@@ -1,4 +1,4 @@
-use image::{DynamicImage, GenericImageView, ImageBuffer, Pixel, Rgba};
+use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 
 pub fn rotate_image(img: DynamicImage, angle: f32) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     let width = (img.width() as f32 * angle.cos() + img.height() as f32 * angle.sin()) as u32;
