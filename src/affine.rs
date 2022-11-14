@@ -1,4 +1,5 @@
 use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
+use ndarray::prelude::*;
 
 pub fn rotate_image(img: DynamicImage, angle: f32) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     let width = (img.width() as f32 * angle.cos() + img.height() as f32 * angle.sin()) as u32;
@@ -8,15 +9,22 @@ pub fn rotate_image(img: DynamicImage, angle: f32) -> ImageBuffer<Rgba<u8>, Vec<
     // 変換後の画像の任意の座標(u,v)に対してアフィン逆変換を行ない、元の画像から色を取得する
     for v in 0..rotated_img.height() - 1 {
         for u in 0..rotated_img.width() - 1 {
-            let a = img.width() / 2;
-            let b = img.height() / 2;
             // 逆アフィン変換
-            let x = (u as i32 - (width / 2) as i32) as f32 * angle.cos()
-                - (v as i32 - (height / 2) as i32) as f32 * angle.sin()
-                + a as f32;
-            let y = (u as i32 - (width / 2) as i32) as f32 * angle.sin()
-                + (v as i32 - (height / 2) as i32) as f32 * angle.cos()
-                + b as f32;
+            let rotation = array![
+                [angle.cos(), -angle.sin()],
+                [angle.sin(), angle.cos()]
+            ];
+            let shift_to_zero = array![
+                [(u as i32 - (width / 2) as i32) as f32],
+                [(v as i32 - (height / 2) as i32) as f32],
+            ];
+            let shift_to_center_of_image = array![
+                [(img.width() / 2) as f32],
+                [(img.height() / 2) as f32],
+            ];
+            let reverse_affine_transformed = rotation.dot(&shift_to_zero) + shift_to_center_of_image;
+            let x = reverse_affine_transformed[[0,0]];
+            let y = reverse_affine_transformed[[1,0]];
 
             // 計算された座標が元の画像の領域内にあるか
             if 0.0 < x && x < (img.width() - 1) as f32 && 0.0 < y && y < (img.height() - 1) as f32 {
